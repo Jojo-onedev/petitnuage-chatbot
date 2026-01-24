@@ -90,7 +90,10 @@ app = FastAPI(title="Petit Nuage Chatbot API")
 # Configuration CORS
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"], # À restreindre en production (ex: http://localhost:5173)
+    allow_origins=[
+        "http://localhost:5173",
+        "https://petitnuage-chatbot.vercel.app"
+    ],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

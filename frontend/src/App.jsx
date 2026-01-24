@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 
-const API_URL = 'http://localhost:8000/chat';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/chat';
 
 function App() {
   const [messages, setMessages] = useState([
@@ -72,8 +72,8 @@ function App() {
             >
               <div
                 className={`max-w-[80%] rounded-2xl px-4 py-3 shadow-sm ${msg.role === 'user'
-                    ? 'bg-sky-500 text-white rounded-tr-none'
-                    : 'bg-white text-slate-700 border border-slate-100 rounded-tl-none'
+                  ? 'bg-sky-500 text-white rounded-tr-none'
+                  : 'bg-white text-slate-700 border border-slate-100 rounded-tl-none'
                   }`}
               >
                 <div className="whitespace-pre-wrap text-sm leading-relaxed">
