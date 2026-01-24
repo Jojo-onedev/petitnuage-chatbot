@@ -1,7 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from 'axios';
 
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000/chat';
+const getApiUrl = () => {
+  const url = import.meta.env.VITE_API_URL || 'http://localhost:8000';
+  return url.endsWith('/chat') ? url : `${url.replace(/\/$/, '')}/chat`;
+};
+
+const API_URL = getApiUrl();
 
 function App() {
   const [messages, setMessages] = useState([
