@@ -2,6 +2,44 @@
 
 @layer base {
   body {
-    @apply bg-slate-50 text-slate-900 font-sans;
+    @apply bg-slate-50 text-slate-900 font-sans overflow-hidden;
   }
 }
+
+@layer utilities {
+  .glass {
+    @apply bg-white/70 backdrop-blur-md border border-white/20 shadow-xl;
+  }
+
+  .bubble {
+    @apply absolute rounded-full opacity-20 pointer-events-none;
+    animation: float 20s infinite linear;
+  }
+}
+
+@keyframes float {
+  0% {
+    transform: translateY(100vh) translateX(0) scale(1);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.2;
+  }
+  90% {
+    opacity: 0.2;
+  }
+  100% {
+    transform: translateY(-20vh) translateX(20px) scale(1.1);
+    opacity: 0;
+  }
+}
+
+/* Custom bubble variations */
+.bubble-1 { width: 80px; height: 80px; left: 10%; animation-duration: 25s; animation-delay: 0s; background: linear-gradient(to bottom right, #7dd3fc, #38bdf8); }
+.bubble-2 { width: 120px; height: 120px; left: 25%; animation-duration: 30s; animation-delay: 5s; background: linear-gradient(to bottom right, #bae6fd, #7dd3fc); }
+.bubble-3 { width: 60px; height: 60px; left: 45%; animation-duration: 22s; animation-delay: 2s; background: linear-gradient(to bottom right, #e0f2fe, #bae6fd); }
+.bubble-4 { width: 100px; height: 100px; left: 65%; animation-duration: 28s; animation-delay: 8s; background: linear-gradient(to bottom right, #7dd3fc, #38bdf8); }
+.bubble-5 { width: 50px; height: 50px; left: 85%; animation-duration: 20s; animation-delay: 1s; background: linear-gradient(to bottom right, #bae6fd, #7dd3fc); }
+.bubble-6 { width: 90px; height: 90px; left: 5%; animation-duration: 35s; animation-delay: 12s; background: linear-gradient(to bottom right, #e0f2fe, #bae6fd); }
+.bubble-7 { width: 110px; height: 110px; left: 40%; animation-duration: 32s; animation-delay: 15s; background: linear-gradient(to bottom right, #7dd3fc, #38bdf8); }
+.bubble-8 { width: 70px; height: 70px; left: 80%; animation-duration: 26s; animation-delay: 4s; background: linear-gradient(to bottom right, #bae6fd, #7dd3fc); }
