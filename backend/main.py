@@ -75,6 +75,11 @@ CATALOGUE PRODUITS (SÉLECTION PHARE) :
 - Porte-bébé "Lien d'Amour" : 48 000 FCFA
 - Hochet dentition bois/silicone : 6 500 FCFA
 - Sortie de bain "Panda" : 14 000 FCFA
+- Tapis de bain "Nuage" : 18 000 FCFA
+- Chaise haute "Équilibre" : 25 000 FCFA
+- Kit de sécurité "Petit Nuage" : 15 000 FCFA
+- Veilleuse "Lune" : 8 000 FCFA
+- Lit à barreaux "Sécurité" : 120 000 FCFA
 """
 
 # Initialisation du modèle Gemini
@@ -103,19 +108,27 @@ class ChatRequest(BaseModel):
     message: str
     history: list = [] # Permet de gérer l'historique côté client
 
+def convert_history(history: list) -> list:
+    """Convertit l'historique du frontend au format Gemini."""
+    gemini_history = []
+    for msg in history:
+        role = "user" if msg.get("role") == "user" else "model"
+        gemini_history.append({
+            "role": role,
+            "parts": [{"text": msg.get("content", "")}]
+        })
+    return gemini_history
+
+
 @app.post("/chat")
 async def chat(request: ChatRequest):
     if not api_key:
         raise HTTPException(status_code=500, detail="Clé API Gemini non configurée.")
-    
+
     try:
-        # On pourrait initialiser une session avec l'historique ici si nécessaire
-        # chat_session = model.start_chat(history=request.history)
-        # response = chat_session.send_message(request.message)
-        
-        # Pour faire simple avec system_instruction et un appel direct :
-        response = model.generate_content(request.message)
-        
+        gemini_history = convert_history(request.history)
+        chat_session = model.start_chat(history=gemini_history)
+        response = chat_session.send_message(request.message)
         return {"response": response.text}
     except Exception as e:
         print(f"Erreur Gemini: {e}")
