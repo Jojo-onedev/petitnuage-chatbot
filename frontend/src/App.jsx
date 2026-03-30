@@ -17,6 +17,7 @@ function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [quickQuestions, setQuickQuestions] = useState([]);
   const [feedbackGiven, setFeedbackGiven] = useState({});
+  const [globalFeedback, setGlobalFeedback] = useState(null); // null, "yes", "no"
   const [showStats, setShowStats] = useState(false);
   const [stats, setStats] = useState(null);
   const [responseTimes, setResponseTimes] = useState([]);
@@ -88,6 +89,17 @@ function App() {
     }
   };
 
+  const handleGlobalFeedback = async (rating) => {
+    setGlobalFeedback(rating);
+    try {
+      await axios.post(`${API_URL}/feedback`, {
+        message_index: -1,
+        rating: rating === "yes" ? "up" : "down",
+        comment: "feedback_conversation",
+      });
+    } catch {}
+  };
+
   const handleReset = async () => {
     try {
       await axios.post(`${API_URL}/reset`);
@@ -97,6 +109,7 @@ function App() {
     ]);
     setFeedbackGiven({});
     setResponseTimes([]);
+    setGlobalFeedback(null);
   };
 
   const handleShowStats = async () => {
@@ -260,6 +273,39 @@ function App() {
               </div>
             </div>
           ))}
+
+          {/* Global conversation feedback - appears after 3 assistant responses */}
+          {messages.filter(m => m.role === 'assistant' && m.messageIndex !== undefined).length >= 3 && globalFeedback === null && (
+            <div className="flex justify-center my-4">
+              <div className="bg-white/90 backdrop-blur-sm border border-sky-100 rounded-2xl px-5 py-3 shadow-md text-center">
+                <p className="text-sm text-slate-600 mb-2">Cette conversation vous a-t-elle été utile ?</p>
+                <div className="flex gap-3 justify-center">
+                  <button
+                    onClick={() => handleGlobalFeedback("yes")}
+                    className="bg-green-50 hover:bg-green-100 text-green-600 border border-green-200 rounded-full px-4 py-1.5 text-sm font-medium transition-all hover:scale-105 active:scale-95"
+                  >
+                    Oui ☁️
+                  </button>
+                  <button
+                    onClick={() => handleGlobalFeedback("no")}
+                    className="bg-red-50 hover:bg-red-100 text-red-500 border border-red-200 rounded-full px-4 py-1.5 text-sm font-medium transition-all hover:scale-105 active:scale-95"
+                  >
+                    Non
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {globalFeedback && (
+            <div className="flex justify-center my-4">
+              <div className="bg-sky-50/80 backdrop-blur-sm border border-sky-100 rounded-2xl px-5 py-2.5 shadow-sm">
+                <p className="text-sm text-sky-600">
+                  {globalFeedback === "yes" ? "Merci pour votre retour ! Ravie de vous avoir aidé ☁️✨" : "Merci pour votre retour, nous allons nous améliorer 🙏"}
+                </p>
+              </div>
+            </div>
+          )}
 
           {isLoading && (
             <div className="flex justify-start mb-4">
