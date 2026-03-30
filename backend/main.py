@@ -1,4 +1,6 @@
 import os
+import time
+from datetime import datetime
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -108,6 +110,32 @@ class ChatRequest(BaseModel):
     message: str
     history: list = [] # Permet de gérer l'historique côté client
 
+class FeedbackRequest(BaseModel):
+    message_index: int
+    rating: str  # "up" or "down"
+    comment: str = ""
+
+# In-memory storage for demo (conversations, feedback, stats)
+conversations_store = []
+feedback_store = []
+session_stats = {
+    "total_conversations": 0,
+    "total_messages": 0,
+    "total_feedback": 0,
+    "positive_feedback": 0,
+    "negative_feedback": 0,
+    "start_time": datetime.now().isoformat(),
+}
+
+QUICK_QUESTIONS = [
+    "Quels sont vos produits les plus populaires ?",
+    "Comment suivre ma commande ?",
+    "Quelle est votre politique de retour ?",
+    "Livrez-vous au Burkina Faso ?",
+    "Avez-vous des produits en coton bio ?",
+    "Quel est le prix du kit de naissance ?",
+]
+
 def convert_history(history: list) -> list:
     """Convertit l'historique du frontend au format Gemini."""
     gemini_history = []
@@ -128,11 +156,68 @@ async def chat(request: ChatRequest):
     try:
         gemini_history = convert_history(request.history)
         chat_session = model.start_chat(history=gemini_history)
+        start = time.time()
         response = chat_session.send_message(request.message)
-        return {"response": response.text}
+        elapsed = time.time() - start
+
+        session_stats["total_messages"] += 1
+
+        conversation_entry = {
+            "timestamp": datetime.now().isoformat(),
+            "user_message": request.message,
+            "assistant_response": response.text,
+            "response_time_ms": round(elapsed * 1000),
+            "history_length": len(request.history),
+        }
+        conversations_store.append(conversation_entry)
+
+        return {
+            "response": response.text,
+            "response_time_ms": round(elapsed * 1000),
+            "message_index": len(conversations_store) - 1,
+        }
     except Exception as e:
         print(f"Erreur Gemini: {e}")
         raise HTTPException(status_code=500, detail="Une erreur est survenue lors de la communication avec l'IA.")
+
+@app.post("/feedback")
+async def submit_feedback(request: FeedbackRequest):
+    entry = {
+        "message_index": request.message_index,
+        "rating": request.rating,
+        "comment": request.comment,
+        "timestamp": datetime.now().isoformat(),
+    }
+    feedback_store.append(entry)
+    session_stats["total_feedback"] += 1
+    if request.rating == "up":
+        session_stats["positive_feedback"] += 1
+    elif request.rating == "down":
+        session_stats["negative_feedback"] += 1
+    return {"status": "ok", "message": "Merci pour votre retour ! ☁️"}
+
+@app.get("/stats")
+async def get_stats():
+    satisfaction = 0
+    if session_stats["total_feedback"] > 0:
+        satisfaction = round(
+            (session_stats["positive_feedback"] / session_stats["total_feedback"]) * 100, 1
+        )
+    return {
+        **session_stats,
+        "satisfaction_rate": satisfaction,
+        "recent_conversations": conversations_store[-10:],
+        "recent_feedback": feedback_store[-10:],
+    }
+
+@app.get("/quick-questions")
+async def get_quick_questions():
+    return {"questions": QUICK_QUESTIONS}
+
+@app.post("/reset")
+async def reset_conversation():
+    session_stats["total_conversations"] += 1
+    return {"status": "ok", "message": "Conversation réinitialisée."}
 
 @app.get("/")
 async def root():
